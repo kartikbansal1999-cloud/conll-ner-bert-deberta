@@ -7,6 +7,7 @@ Usage:
 """
 import argparse
 import json
+import math
 import os
 
 import torch
@@ -43,9 +44,12 @@ tokenized = ds.map(lambda x: tokenize_and_align(x, tok), batched=True, remove_co
 
 cuda = torch.cuda.is_available()
 bf16 = cuda and torch.cuda.is_bf16_supported()
+# 10% linear warmup, as an explicit step count (`warmup_ratio` was removed in newer transformers)
+total_steps = math.ceil(len(tokenized["train"]) / a.batch_size) * a.epochs
+warmup_steps = int(0.1 * total_steps)
 args = TrainingArguments(
     output_dir=os.path.join(run_dir, "checkpoints"), learning_rate=a.lr, num_train_epochs=a.epochs,
-    per_device_train_batch_size=a.batch_size, per_device_eval_batch_size=64, weight_decay=0.01, warmup_ratio=0.1,
+    per_device_train_batch_size=a.batch_size, per_device_eval_batch_size=64, weight_decay=0.01, warmup_steps=warmup_steps,
     eval_strategy="epoch", save_strategy="epoch", save_total_limit=1, load_best_model_at_end=True,
     metric_for_best_model="f1", greater_is_better=True, seed=a.seed, fp16=cuda and not bf16, bf16=bf16,
     logging_steps=50, report_to="none")
