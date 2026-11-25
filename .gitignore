@@ -1,0 +1,5 @@
+runs/*/checkpoints/
+runs/*/best/
+__pycache__/
+.venv/
+*.pyc

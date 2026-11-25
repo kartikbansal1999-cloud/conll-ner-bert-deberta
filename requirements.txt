@@ -1,0 +1,8 @@
+torch
+transformers>=4.46
+datasets>=2.20
+seqeval
+numpy
+accelerate>=0.34
+sentencepiece
+tiktoken
