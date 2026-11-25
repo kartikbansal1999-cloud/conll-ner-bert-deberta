@@ -120,7 +120,7 @@ def evaluate_predictions(tokens, y_true, y_pred, out_dir):
         "error_taxonomy": dict(counts),
     }
     with open(os.path.join(out_dir, "metrics.json"), "w") as f:
-        json.dump(result, f, indent=2)
+        json.dump(result, f, indent=2, default=lambda o: o.item() if hasattr(o, "item") else str(o))
     with open(os.path.join(out_dir, "errors.jsonl"), "w") as f:
         for e in examples:
             f.write(json.dumps(e) + "\n")

@@ -58,11 +58,16 @@ trainer = Trainer(model=model, args=args, train_dataset=tokenized["train"], eval
                   compute_metrics=make_compute_metrics(labels))
 trainer.train()
 
-best = os.path.join(run_dir, "best")
-trainer.save_model(best)
-tok.save_pretrained(best)
 with open(os.path.join(run_dir, "train_log.json"), "w") as f:
     json.dump(trainer.state.log_history, f, indent=2)
+
+# Reload the best-by-validation checkpoint explicitly with from_pretrained: the Trainer's own
+# best-model reload can mis-handle LayerNorm gamma/beta key names in some transformers versions.
+best = os.path.join(run_dir, "best")
+model = AutoModelForTokenClassification.from_pretrained(trainer.state.best_model_checkpoint)
+model.save_pretrained(best)
+tok.save_pretrained(best)
+print(f"Best checkpoint: {trainer.state.best_model_checkpoint} (val F1 {trainer.state.best_metric:.4f})")
 
 model.to("cuda" if cuda else "cpu")
 print("\n=== TEST (best checkpoint by validation F1) ===")
